@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import viteCompression from 'vite-plugin-compression'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -8,6 +9,20 @@ export default defineConfig({
       babel: {
         plugins: [['babel-plugin-react-compiler']],
       },
+    }),
+    // Gzip compression for production
+    viteCompression({
+      algorithm: 'gzip',
+      ext: '.gz',
+      threshold: 1024, // Only compress files > 1KB
+      deleteOriginFile: false,
+    }),
+    // Brotli compression for modern browsers
+    viteCompression({
+      algorithm: 'brotliCompress',
+      ext: '.br',
+      threshold: 1024,
+      deleteOriginFile: false,
     }),
   ],
   server: {
@@ -20,22 +35,47 @@ export default defineConfig({
     },
   },
   build: {
-    // Target modern browsers only — smaller output, no legacy polyfills
     target: 'es2020',
-    // Aggressive minification
     minify: 'esbuild',
-    // Split vendor chunks so React/router cache separately from app code
+    cssMinify: true,
+    
     rollupOptions: {
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
           'router': ['react-router-dom'],
         },
+        // Optimize chunk names for better caching
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
-    // Reduce CSS code-split threshold → inline small CSS
+    
+    // Inline small assets as base64 to reduce requests
+    assetsInlineLimit: 4096,
+    
+    // Enable CSS code splitting
     cssCodeSplit: true,
-    // Enable source maps only for debugging, disable for production
+    
+    // Disable source maps for production
     sourcemap: false,
+    
+    // Optimize chunk size
+    chunkSizeWarningLimit: 1000,
+    
+    // Enable module preload polyfill
+    modulePreload: {
+      polyfill: true,
+    },
+    
+    // Report compressed size
+    reportCompressedSize: true,
+  },
+  
+  // Optimize dependencies
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom'],
+    exclude: [],
   },
 })

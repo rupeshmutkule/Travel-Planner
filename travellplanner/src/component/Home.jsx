@@ -17,8 +17,8 @@ const ConfirmModal = lazy(() => import("./ConfirmModal"));
 const HistorySidebar = lazy(() => import("./HistorySidebar"));
 const ResultsSection = lazy(() => import("./ResultsSection"));
 
-/* ── Pre-computed stars (12 instead of 30 — fewer DOM nodes) ──────── */
-const starsData = [...Array(12)].map(() => ({
+/* ── Pre-computed stars (6 instead of 12 for mobile perf) ──────── */
+const starsData = [...Array(6)].map(() => ({
   top: `${Math.random() * 100}%`,
   left: `${Math.random() * 100}%`,
   size: `${Math.random() * 2 + 1}px`,
@@ -89,8 +89,14 @@ export default function Home() {
     const savedUser = localStorage.getItem("user");
     if (savedUser) setState({ user: JSON.parse(savedUser) });
 
-    const timer = setTimeout(() => setState({ isDeferredLoaded: true }), 100);
-    return () => clearTimeout(timer);
+    // Defer non-critical renders using requestIdleCallback
+    const schedule = window.requestIdleCallback || ((cb) => setTimeout(cb, 50));
+    const id = schedule(() => setState({ isDeferredLoaded: true }));
+    
+    return () => {
+      if (window.cancelIdleCallback) window.cancelIdleCallback(id);
+      else clearTimeout(id);
+    };
   }, []);
 
   const location = useLocation();
@@ -129,6 +135,7 @@ export default function Home() {
     const id = schedule(() => fetchHistory());
     return () => {
       if (window.cancelIdleCallback) window.cancelIdleCallback(id);
+      else clearTimeout(id);
     };
   }, [user, fetchHistory]);
 
@@ -242,7 +249,7 @@ export default function Home() {
 
   return (
     <div className="app-layout">
-      {/* Decorative stars — deferred for perf, reduced count (12 vs 30) */}
+      {/* Decorative stars — deferred and reduced for mobile perf */}
       {isDeferredLoaded && starsData.map((star, i) => (
         <div key={i} className="star" aria-hidden="true" style={{
           top: star.top, left: star.left,
@@ -251,7 +258,7 @@ export default function Home() {
       ))}
 
       {/* History Sidebar — lazy, only rendered when user is logged in */}
-      {user && (
+      {user && isDeferredLoaded && (
         <Suspense fallback={null}>
           <HistorySidebar
             showHistory={showHistory}
@@ -338,7 +345,7 @@ export default function Home() {
         </main>
 
         {/* Modals — all lazy-loaded, only mounted when needed */}
-        {needsModal && (
+        {needsModal && isDeferredLoaded && (
           <Suspense fallback={null}>
             {!!showDeleteModal && (
               <ConfirmModal
