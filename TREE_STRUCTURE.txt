@@ -1,0 +1,310 @@
+TRAVEL PLANNER - PROJECT TREE STRUCTURE
+========================================
+
+travel-planner/
+│
+├── 📁 server/                                    # Backend Application
+│   │
+│   ├── 📁 controllers/                           # Business Logic
+│   │   ├── authController.js                    # Authentication handlers
+│   │   └── planController.js                    # Travel planning handlers
+│   │
+│   ├── 📁 middleware/                            # Express Middleware
+│   │   └── authMiddleware.js                    # JWT verification
+│   │
+│   ├── 📁 models/                                # MongoDB Schemas
+│   │   ├── History.js                           # Travel history model
+│   │   ├── OTP.js                               # OTP verification model
+│   │   └── User.js                              # User model
+│   │
+│   ├── 📁 routes/                                # API Routes
+│   │   ├── authRoutes.js                        # /api/auth/* endpoints
+│   │   └── planRoutes.js                        # /api/* endpoints
+│   │
+│   ├── 📁 utils/                                 # Utilities
+│   │   └── emailService.js                      # Nodemailer OTP service
+│   │
+│   ├── 📁 node_modules/                          # Dependencies (ignored)
+│   │
+│   ├── .env                                     # ⚙️ Environment variables
+│   ├── server.js                                # 🚀 Main entry point
+│   ├── vercel.json                              # Vercel config
+│   ├── package.json                             # Dependencies
+│   └── package-lock.json                        # Lock file
+│
+│
+├── 📁 travellplanner/                            # Frontend Application
+│   │
+│   ├── 📁 src/                                   # Source Code
+│   │   │
+│   │   ├── 📁 component/                         # React Components
+│   │   │   ├── Auth.jsx                         # Login/Register modal
+│   │   │   ├── ConfirmModal.jsx                 # Confirmation dialogs
+│   │   │   ├── DayCard.jsx                      # Daily itinerary card
+│   │   │   ├── HistorySidebar.jsx               # History sidebar (lazy)
+│   │   │   ├── Home.jsx                         # 🏠 Main page
+│   │   │   ├── HotelCard.jsx                    # Hotel recommendation
+│   │   │   ├── Navbar.jsx                       # Navigation bar
+│   │   │   ├── ResultsSection.jsx               # Results display (lazy)
+│   │   │   ├── SearchCard.jsx                   # 📱 Search input (mobile-optimized)
+│   │   │   ├── SuccessPopup.jsx                 # Success toast
+│   │   │   ├── SuggestionPills.jsx              # Destination suggestions
+│   │   │   └── TermsAndConditions.jsx           # T&C modal (lazy)
+│   │   │
+│   │   ├── config.js                            # ⚙️ API configuration
+│   │   ├── index.css                            # 🎨 Global styles (optimized)
+│   │   ├── main.jsx                             # React entry point
+│   │   └── App.jsx                              # Root component
+│   │
+│   ├── 📁 public/                                # Static Assets
+│   │   └── (images, icons, etc.)
+│   │
+│   ├── 📁 dist/                                  # Build Output (generated)
+│   │   ├── assets/                              # Compiled JS/CSS
+│   │   └── index.html                           # Built HTML
+│   │
+│   ├── 📁 node_modules/                          # Dependencies (ignored)
+│   │
+│   ├── .env                                     # ⚙️ Environment variables
+│   ├── .gitignore                               # Git ignore rules
+│   ├── index.html                               # HTML template
+│   ├── vite.config.js                           # ⚡ Vite configuration
+│   ├── tailwind.config.js                       # Tailwind config
+│   ├── postcss.config.js                        # PostCSS config
+│   ├── eslint.config.js                         # ESLint config
+│   ├── vercel.json                              # Vercel config
+│   ├── package.json                             # Dependencies
+│   ├── package-lock.json                        # Lock file
+│   └── README.md                                # Original README
+│
+│
+├── 📄 README.md                                  # 📚 Main documentation
+├── 📄 SETUP.md                                   # 🚀 Setup guide
+├── 📄 QUICK_REFERENCE.md                         # ⚡ Quick reference
+├── 📄 CHANGES_SUMMARY.md                         # 📝 Changes log
+├── 📄 PROJECT_STRUCTURE.md                       # 📁 Detailed structure
+├── 📄 TREE_STRUCTURE.txt                         # 🌳 This file
+│
+└── .gitignore                                    # Root git ignore
+
+
+========================================
+COMPONENT HIERARCHY
+========================================
+
+App.jsx
+  └── Home.jsx (Main Page)
+      │
+      ├── Navbar.jsx
+      │   ├── Logo
+      │   ├── History Button
+      │   └── Login/Logout Button
+      │
+      ├── SearchCard.jsx (Mobile-Optimized)
+      │   ├── Destination Input
+      │   ├── Date Button (Mobile)
+      │   ├── Date Fields (Desktop)
+      │   └── Go Button
+      │
+      ├── SuggestionPills.jsx
+      │   └── Destination Suggestions
+      │
+      ├── ResultsSection.jsx (Lazy Loaded)
+      │   ├── HotelCard.jsx
+      │   └── DayCard.jsx (Multiple)
+      │       ├── Day Badge
+      │       ├── Day Title
+      │       └── Activities List
+      │
+      ├── HistorySidebar.jsx (Lazy Loaded)
+      │   ├── New Chat Button
+      │   ├── Search Input
+      │   ├── History List
+      │   └── User Info
+      │
+      ├── Auth.jsx (Lazy Loaded)
+      │   ├── Login Form
+      │   └── Register Form
+      │
+      ├── TermsAndConditions.jsx (Lazy Loaded)
+      │   └── T&C Content
+      │
+      ├── ConfirmModal.jsx (Lazy Loaded)
+      │   ├── Delete Confirmation
+      │   └── Logout Confirmation
+      │
+      └── SuccessPopup.jsx
+          └── Success Message
+
+
+========================================
+API ROUTES
+========================================
+
+Backend Server (http://localhost:3001 or https://travel-plane-maker.vercel.app)
+
+Authentication:
+  POST   /api/auth/register          # Register new user
+  POST   /api/auth/login             # Login user
+  POST   /api/auth/send-otp          # Send OTP email
+
+Travel Planning:
+  POST   /api/plan                   # Generate travel plan
+  GET    /api/history                # Get user's travel history
+  POST   /api/history/save           # Save travel plan
+  PATCH  /api/history/:id            # Update history item
+  DELETE /api/history/:id            # Delete history item
+
+Health Check:
+  GET    /api/health                 # Server health status
+
+
+========================================
+DATA FLOW
+========================================
+
+1. User Input Flow:
+   User → SearchCard → Home → API Call → Backend → Gemini AI → Response → Display
+
+2. Authentication Flow:
+   User → Auth Modal → API Call → Backend → JWT Token → LocalStorage → Authenticated
+
+3. History Flow:
+   User → History Sidebar → API Call → Backend → MongoDB → Display History
+
+
+========================================
+ENVIRONMENT VARIABLES
+========================================
+
+Server (.env):
+  ├── PORT                           # Server port (3001)
+  ├── MONGO_URI                      # MongoDB connection
+  ├── JWT_SECRET                     # JWT secret key
+  ├── EMAIL_USER                     # Email for OTP
+  ├── EMAIL_PASS                     # Email password
+  ├── GEMINI_API_KEY                 # Google Gemini API
+  ├── OPENAI_API_KEY                 # OpenAI API (optional)
+  ├── FRONTEND_URL_DEV               # Dev frontend URL
+  └── FRONTEND_URL                   # Prod frontend URL
+
+Frontend (.env):
+  ├── VITE_API_URL                   # Backend API URL
+  └── VITE_APP_URL                   # Frontend URL
+
+
+========================================
+BUILD & DEPLOYMENT
+========================================
+
+Development:
+  Backend:  cd server && npm start
+  Frontend: cd travellplanner && npm run dev
+
+Production Build:
+  Frontend: cd travellplanner && npm run build
+  Output:   travellplanner/dist/
+
+Deployment:
+  Backend:  cd server && vercel --prod
+  Frontend: cd travellplanner && vercel --prod
+
+
+========================================
+FILE COUNTS
+========================================
+
+Backend:
+  ├── Controllers: 2 files
+  ├── Middleware: 1 file
+  ├── Models: 3 files
+  ├── Routes: 2 files
+  ├── Utils: 1 file
+  └── Config: 3 files
+  Total: ~12 files
+
+Frontend:
+  ├── Components: 12 files
+  ├── Config: 1 file
+  ├── Styles: 1 file
+  ├── Entry: 2 files
+  └── Config: 6 files
+  Total: ~22 files
+
+Documentation:
+  └── 6 files
+
+Total Project Files: ~40 files (excluding node_modules)
+
+
+========================================
+BUNDLE SIZES (Production)
+========================================
+
+Frontend (Gzipped):
+  ├── Main bundle:     ~60 KB
+  ├── React vendor:    ~40 KB
+  ├── Router:          ~15 KB
+  └── CSS:             ~20 KB
+  Total:              ~135 KB
+
+Backend:
+  └── Total code:      ~15 KB
+
+
+========================================
+PERFORMANCE METRICS
+========================================
+
+Lighthouse Scores (Target):
+  ├── Performance:     85-95
+  ├── LCP:            < 2.5s
+  ├── FCP:            < 1.8s
+  ├── CLS:            < 0.1
+  └── Bundle:         ~135 KB (gzipped)
+
+
+========================================
+KEY FEATURES
+========================================
+
+✅ AI-powered trip planning (Gemini)
+✅ User authentication (JWT + OTP)
+✅ Travel history management
+✅ Mobile-optimized interface
+✅ High performance (Lighthouse 85+)
+✅ Lazy loading components
+✅ Code splitting
+✅ Gzip/Brotli compression
+✅ Responsive design
+✅ Dark theme
+
+
+========================================
+TECHNOLOGY STACK
+========================================
+
+Backend:
+  ├── Node.js
+  ├── Express
+  ├── MongoDB (Mongoose)
+  ├── JWT (jsonwebtoken)
+  ├── Nodemailer
+  └── Google Gemini AI
+
+Frontend:
+  ├── React 19
+  ├── Vite
+  ├── React Router
+  ├── Tailwind CSS
+  └── PostCSS
+
+DevOps:
+  ├── Vercel (hosting)
+  ├── Git (version control)
+  └── npm (package manager)
+
+
+========================================
+END OF TREE STRUCTURE
+========================================

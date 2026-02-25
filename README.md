@@ -15,6 +15,10 @@
     └── src/            # React components
 ```
 
+**📚 Detailed Structure:**
+- See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for detailed breakdown
+- See [TREE_STRUCTURE.txt](TREE_STRUCTURE.txt) for visual tree diagram
+
 ## ⚙️ Environment Configuration
 
 ### Server (.env in server/)
