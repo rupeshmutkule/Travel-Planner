@@ -21,6 +21,14 @@ const historySchema = new mongoose.Schema({
   plan: {
     type: Object, // Stores the JSON itinerary
     required: true,
+  },
+  isPinned: {
+    type: Boolean,
+    default: false,
+  },
+  isArchived: {
+    type: Boolean,
+    default: false,
   }
 }, { timestamps: true });
 

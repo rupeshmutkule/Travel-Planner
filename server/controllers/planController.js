@@ -144,3 +144,25 @@ export const saveExistingPlan = async (req, res) => {
     res.status(500).json({ error: `Failure: ${err.message}` });
   }
 };
+
+export const updateHistory = async (req, res) => {
+  try {
+    const updates = {};
+    if (req.body.isPinned !== undefined) updates.isPinned = req.body.isPinned;
+    if (req.body.isArchived !== undefined) updates.isArchived = req.body.isArchived;
+
+    const history = await History.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      { $set: updates },
+      { new: true }
+    );
+
+    if (!history) {
+      return res.status(404).json({ message: 'History item not found or unauthorized' });
+    }
+
+    res.json(history);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

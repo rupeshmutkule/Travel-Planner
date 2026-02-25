@@ -10,7 +10,6 @@ async function test() {
     console.log("Testing with key:", k ? "EXISTS" : "MISSING");
     const modelName = "gemini-2.5-flash"; 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${k}`;
-
     try {
         const response = await fetch(url, {
             method: "POST",
@@ -32,3 +31,4 @@ async function test() {
     }
 }
 test();
+
