@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import config from '../config';
 
 export default function Auth({ isOpen, onClose, onAuthSuccess, authFormData, updateAuthData, onOpenTerms }) {
   const { isLogin, name, email, mobileNumber, password, confirmPassword, otp, otpSent, termsAccepted } = authFormData;
@@ -34,7 +35,7 @@ export default function Auth({ isOpen, onClose, onAuthSuccess, authFormData, upd
     setError('');
     setSendingOtp(true);
     try {
-      const res = await fetch('/api/auth/send-otp', {
+      const res = await fetch(`${config.apiUrl}/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, mobileNumber, purpose: isLogin ? 'login' : 'register' }),
@@ -61,7 +62,7 @@ export default function Auth({ isOpen, onClose, onAuthSuccess, authFormData, upd
     }
 
     setLoading(true);
-    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+    const endpoint = isLogin ? `${config.apiUrl}/auth/login` : `${config.apiUrl}/auth/register`;
     const body = isLogin ? { loginIdentifier, password } : { name, email, mobileNumber, password, otp };
 
     try {

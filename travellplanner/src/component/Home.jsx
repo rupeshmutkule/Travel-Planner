@@ -1,5 +1,6 @@
 import { useReducer, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import config from "../config";
 
 /* ── Critical-path components (needed on first paint) ──────────────── */
 import Navbar from "./Navbar";
@@ -115,7 +116,7 @@ export default function Home() {
   const fetchHistory = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch("/api/history", {
+      const res = await fetch(`${config.apiUrl}/history`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
       if (res.ok) {
@@ -150,7 +151,7 @@ export default function Home() {
       const headers = { "Content-Type": "application/json" };
       if (user) headers["Authorization"] = `Bearer ${user.token}`;
 
-      const res = await fetch("/api/plan", {
+      const res = await fetch(`${config.apiUrl}/plan`, {
         method: "POST", headers,
         body: JSON.stringify({ place: destination, checkIn, checkOut, historyId: activeHistoryId }),
       });
@@ -196,7 +197,7 @@ export default function Home() {
   const handleDeleteHistory = useCallback(async (id) => {
     if (!user) return;
     try {
-      const res = await fetch(`/api/history/${id}`, {
+      const res = await fetch(`${config.apiUrl}/history/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${user.token}` },
       });
@@ -215,7 +216,7 @@ export default function Home() {
   const handleUpdateHistoryStatus = useCallback(async (id, updates) => {
     if (!user) return;
     try {
-      const res = await fetch(`/api/history/${id}`, {
+      const res = await fetch(`${config.apiUrl}/history/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -387,7 +388,7 @@ export default function Home() {
 
                 if (days.length > 0) {
                   try {
-                    await fetch("/api/history/save", {
+                    await fetch(`${config.apiUrl}/history/save`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json", Authorization: `Bearer ${u.token}` },
                       body: JSON.stringify({ destination, checkIn, checkOut, plan: { hotel, days } }),
