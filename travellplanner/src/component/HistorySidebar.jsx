@@ -139,9 +139,9 @@ function HistorySidebar({
         <div className="sidebar-footer">
           <div className="sidebar-avatar" aria-hidden="true">{user.name[0]}</div>
           <div className="sidebar-user-info">
-            <div className="sidebar-user-name">{user.name}</div>
+            <div className="sidebar-user-name" title={user.name}>{user.name}</div>
             <button className="sidebar-logout-link" onClick={() => setShowLogoutModal(true)}>
-              Logout {user.name.split(' ')[0]}
+              Logout
             </button>
           </div>
         </div>
