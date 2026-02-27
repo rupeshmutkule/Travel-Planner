@@ -13,6 +13,7 @@ import SuccessPopup from "./SuccessPopup";
    ResultsSection are only rendered conditionally. Loading them lazily
    removes their JS from the initial bundle and reduces Time-to-Interactive. */
 const Auth = lazy(() => import("./Auth"));
+const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const TermsAndConditions = lazy(() => import("./TermsAndConditions"));
 const ConfirmModal = lazy(() => import("./ConfirmModal"));
 const HistorySidebar = lazy(() => import("./HistorySidebar"));
@@ -63,7 +64,7 @@ export default function Home() {
       running: false, loading: false, error: "",
       days: [], hotel: null, rawText: "",
       user: null, history: [], activeHistoryId: null,
-      isAuthOpen: false, showHistory: false, showDeleteConfirm: null,
+      isAuthOpen: false, isForgotPasswordOpen: false, showHistory: false, showDeleteConfirm: null,
       showDeleteModal: null, showLogoutModal: false, showSuccessPopup: false,
       successUser: "", isTermsOpen: false, isDeferredLoaded: false,
       authFormData: {
@@ -75,7 +76,7 @@ export default function Home() {
 
   const {
     destination, checkIn, checkOut, running, loading, error, days, hotel, rawText,
-    user, history, activeHistoryId, isAuthOpen, showHistory, showDeleteConfirm,
+    user, history, activeHistoryId, isAuthOpen, isForgotPasswordOpen, showHistory, showDeleteConfirm,
     showDeleteModal, showLogoutModal, showSuccessPopup, successUser, isTermsOpen,
     authFormData, isDeferredLoaded
   } = state;
@@ -410,6 +411,18 @@ export default function Home() {
               authFormData={authFormData}
               updateAuthData={updateAuthData}
               onOpenTerms={() => setState({ isAuthOpen: false, isTermsOpen: true })}
+              onOpenForgotPassword={() => setState({ isAuthOpen: false, isForgotPasswordOpen: true })}
+            />
+          </Suspense>
+        )}
+
+        {/* Forgot Password — lazy, only loaded when user clicks Forgot Password */}
+        {isForgotPasswordOpen && (
+          <Suspense fallback={null}>
+            <ForgotPassword
+              isOpen={isForgotPasswordOpen}
+              onClose={() => setState({ isForgotPasswordOpen: false })}
+              onBackToLogin={() => setState({ isForgotPasswordOpen: false, isAuthOpen: true })}
             />
           </Suspense>
         )}

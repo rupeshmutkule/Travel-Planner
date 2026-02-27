@@ -1,7 +1,7 @@
 import SibApiV3Sdk from "sib-api-v3-sdk";
 
 /**
- * ✅ Brevo (Sendinblue) Email Service
+ * Brevo (Sendinblue) Email Service
  * - Uses HTTPS API (Render-safe)
  * - Free: 300 emails/day
  * - Production-ready
@@ -35,11 +35,11 @@ export const sendOTPEmail = async (email, otp) => {
       `,
     });
 
-    console.log("📧 Brevo Email Sent:", response.messageId);
+    console.log(" Brevo Email Sent:", response.messageId);
     return true;
   } catch (error) {
     console.error(
-      "❌ BREVO EMAIL ERROR:",
+      "BREVO EMAIL ERROR:",
       error.response?.text || error.message
     );
     return false;

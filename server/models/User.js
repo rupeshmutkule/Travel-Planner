@@ -19,8 +19,14 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+    minlength: 6,
+    maxlength: 100, // Hashed password will be longer
   }
 }, { timestamps: true });
+
+// Indexes for faster queries
+userSchema.index({ email: 1 });
+userSchema.index({ mobileNumber: 1 });
 
 // Hash password before saving
 userSchema.pre('save', async function() {

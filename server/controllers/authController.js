@@ -6,20 +6,19 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// ===============================
 // JWT
-// ===============================
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
 };
 
-// ===============================
+
 // SEND OTP
-// ===============================
+
 export const sendOTP = async (req, res) => {
-  console.log("🔥 SEND OTP API HIT");
+  console.log(" SEND OTP API HIT");
 
   try {
     const { email, mobileNumber, purpose } = req.body;
@@ -41,8 +40,12 @@ export const sendOTP = async (req, res) => {
       return res.status(404).json({ message: "User does not exist" });
     }
 
+    if (purpose === "forgot-password" && !userExists) {
+      return res.status(404).json({ message: "User not found. Please create an account." });
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log(`🔐 OTP for ${email}: ${otp}`);
+    console.log(`OTP for ${email}: ${otp}`);
 
     // 🔴 DELETE OLD OTPs (IMPORTANT FIX)
     await OTP.deleteMany({ email });
@@ -61,15 +64,15 @@ export const sendOTP = async (req, res) => {
       return res.status(500).json({ message: "Failed to send OTP" });
     }
 
-    // ✅ Save OTP ONLY if email succeeded
-    await OTP.create({ email, otp });
+    // Save OTP ONLY if email succeeded
+    await OTP.create({ email, otp, purpose: purpose || 'register' });
 
     return res.status(200).json({
       success: true,
       message: "OTP sent successfully",
     });
   } catch (error) {
-    console.error("❌ SEND OTP ERROR:", error.message);
+    console.error("SEND OTP ERROR:", error.message);
 
     return res.status(500).json({
       success: false,
@@ -81,12 +84,17 @@ export const sendOTP = async (req, res) => {
   }
 };
 
-// ===============================
+
 // REGISTER
-// ===============================
+
 export const register = async (req, res) => {
   try {
     const { name, email, mobileNumber, password, otp } = req.body;
+
+    // Password validation
+    if (!password || password.length < 6 || password.length > 14) {
+      return res.status(400).json({ message: "Password must be between 6 and 14 characters" });
+    }
 
     if (!otp) {
       return res.status(400).json({ message: "OTP is required" });
@@ -123,14 +131,14 @@ export const register = async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (error) {
-    console.error("❌ REGISTER ERROR:", error.message);
+    console.error(" REGISTER ERROR:", error.message);
     res.status(500).json({ message: "Registration failed" });
   }
 };
 
-// ===============================
+
 // LOGIN
-// ===============================
+
 export const login = async (req, res) => {
   try {
     const { loginIdentifier, password } = req.body;
@@ -151,7 +159,81 @@ export const login = async (req, res) => {
 
     return res.status(401).json({ message: "Invalid credentials" });
   } catch (error) {
-    console.error("❌ LOGIN ERROR:", error.message);
+    console.error(" LOGIN ERROR:", error.message);
     res.status(500).json({ message: "Login failed" });
+  }
+};
+
+
+// VERIFY OTP FOR FORGOT PASSWORD
+
+export const verifyForgotPasswordOTP = async (req, res) => {
+  console.log("🔍 VERIFY FORGOT PASSWORD OTP API HIT");
+  
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
+
+    const otpRecord = await OTP.findOne({ email, otp, purpose: 'forgot-password' });
+
+    if (!otpRecord) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified successfully",
+    });
+  } catch (error) {
+    console.error("🔴 VERIFY OTP ERROR:", error.message);
+    res.status(500).json({ message: "OTP verification failed" });
+  }
+};
+
+
+// RESET PASSWORD
+
+export const resetPassword = async (req, res) => {
+  console.log("🔐 RESET PASSWORD API HIT");
+  
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    // Password validation
+    if (!newPassword || newPassword.length < 6 || newPassword.length > 14) {
+      return res.status(400).json({ message: "Password must be between 6 and 14 characters" });
+    }
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
+
+    const otpRecord = await OTP.findOne({ email, otp, purpose: 'forgot-password' });
+
+    if (!otpRecord) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    await OTP.deleteMany({ email });
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successfully",
+    });
+  } catch (error) {
+    console.error("🔴 RESET PASSWORD ERROR:", error.message);
+    res.status(500).json({ message: "Password reset failed" });
   }
 };

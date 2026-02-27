@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import config from '../config';
 
-export default function Auth({ isOpen, onClose, onAuthSuccess, authFormData, updateAuthData, onOpenTerms }) {
+export default function Auth({ isOpen, onClose, onAuthSuccess, authFormData, updateAuthData, onOpenTerms, onOpenForgotPassword }) {
   const { isLogin, name, email, mobileNumber, password, confirmPassword, otp, otpSent, termsAccepted } = authFormData;
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,7 +20,7 @@ export default function Auth({ isOpen, onClose, onAuthSuccess, authFormData, upd
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
   }, [isOpen, handleKeyDown]);
-
+  
   if (!isOpen) return null;
 
   const handleFieldChange = (field, value) => {
@@ -57,6 +57,10 @@ export default function Auth({ isOpen, onClose, onAuthSuccess, authFormData, upd
     setError('');
 
     if (!isLogin) {
+      if (password.length < 6 || password.length > 14) {
+        setError('Password must be between 6 and 14 characters');
+        return;
+      }
       if (password !== confirmPassword) { setError('Passwords do not match'); return; }
       if (!termsAccepted) { setError('Please accept the Terms and Conditions'); return; }
     }
@@ -168,12 +172,27 @@ export default function Auth({ isOpen, onClose, onAuthSuccess, authFormData, upd
             <label htmlFor="auth-password" className="sr-only">Password</label>
             <input
               id="auth-password"
-              type="password" placeholder="Password" required
+              type="password" placeholder="Password (6-14 characters)" required
               value={password} onChange={e => handleFieldChange('password', e.target.value)}
               className="auth-input"
               autoComplete={isLogin ? "current-password" : "new-password"}
+              minLength="6"
+              maxLength="14"
             />
           </div>
+
+          {isLogin && (
+            <div style={{ textAlign: 'right', marginTop: '-8px', marginBottom: '8px' }}>
+              <button
+                type="button"
+                className="auth-toggle-btn"
+                onClick={onOpenForgotPassword}
+                style={{ fontSize: '0.875rem' }}
+              >
+                Forgot Password?
+              </button>
+            </div>
+          )}
 
           {!isLogin && (
             <>
@@ -181,9 +200,11 @@ export default function Auth({ isOpen, onClose, onAuthSuccess, authFormData, upd
                 <label htmlFor="auth-confirm-pw" className="sr-only">Confirm Password</label>
                 <input
                   id="auth-confirm-pw"
-                  type="password" placeholder="Confirm Password" required
+                  type="password" placeholder="Confirm Password (6-14 characters)" required
                   value={confirmPassword} onChange={e => handleFieldChange('confirmPassword', e.target.value)}
                   className="auth-input" autoComplete="new-password"
+                  minLength="6"
+                  maxLength="14"
                 />
               </div>
               <div className="terms-check-row">

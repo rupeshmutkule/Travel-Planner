@@ -11,9 +11,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// =======================
+
 // MongoDB Connection
-// =======================
+
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI);
@@ -26,9 +26,9 @@ const connectDB = async () => {
 
 connectDB();
 
-// =======================
+
 // CORS (FIXED)
-// =======================
+
 app.use(
   cors({
     origin: [
@@ -41,18 +41,17 @@ app.use(
   })
 );
 
-// ✅ REQUIRED for preflight
+//  REQUIRED for preflight
 app.options("*", cors());
 
-// =======================
+
 // Middleware
-// =======================
+
 app.use(express.json());
 app.use(morgan("dev"));
 
-// =======================
 // Routes
-// =======================
+
 app.use("/api/auth", authRoutes);
 app.use("/api", planRoutes);
 
@@ -67,9 +66,9 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-// =======================
+
 // Start Server
-// =======================
+
 app.listen(PORT, () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });
