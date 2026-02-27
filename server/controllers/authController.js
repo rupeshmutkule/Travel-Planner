@@ -27,10 +27,18 @@ export const sendOTP = async (req, res) => {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    // Check user existence
-    const userExists = await User.findOne({
-      $or: [{ email }, { mobileNumber }],
-    });
+    // Check user existence based on purpose
+    let userExists;
+    
+    if (purpose === "forgot-password") {
+      // For forgot password, only check email
+      userExists = await User.findOne({ email });
+    } else {
+      // For register/login, check both email and mobile
+      userExists = await User.findOne({
+        $or: [{ email }, { mobileNumber }],
+      });
+    }
 
     if (purpose === "register" && userExists) {
       return res.status(400).json({ message: "User already exists" });
@@ -40,6 +48,7 @@ export const sendOTP = async (req, res) => {
       return res.status(404).json({ message: "User does not exist" });
     }
 
+    // ✅ CHECK USER EXISTS BEFORE SENDING EMAIL FOR FORGOT PASSWORD
     if (purpose === "forgot-password" && !userExists) {
       return res.status(404).json({ message: "User not found. Please create an account." });
     }
@@ -235,5 +244,37 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     console.error("🔴 RESET PASSWORD ERROR:", error.message);
     res.status(500).json({ message: "Password reset failed" });
+  }
+};
+
+
+// VERIFY EMAIL EXISTS (FOR FORGOT PASSWORD)
+
+export const verifyEmailExists = async (req, res) => {
+  console.log("📧 VERIFY EMAIL EXISTS API HIT");
+  
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const userExists = await User.findOne({ email });
+
+    if (!userExists) {
+      return res.status(404).json({ 
+        success: false,
+        message: "User not found. Please create an account." 
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User verified successfully",
+    });
+  } catch (error) {
+    console.error("🔴 VERIFY EMAIL ERROR:", error.message);
+    res.status(500).json({ message: "Email verification failed" });
   }
 };

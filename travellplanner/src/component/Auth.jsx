@@ -20,6 +20,11 @@ export default function Auth({ isOpen, onClose, onAuthSuccess, authFormData, upd
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
   }, [isOpen, handleKeyDown]);
+
+  // Clear error when switching between login/register
+  useEffect(() => {
+    setError('');
+  }, [isLogin]);
   
   if (!isOpen) return null;
 
@@ -233,7 +238,10 @@ export default function Auth({ isOpen, onClose, onAuthSuccess, authFormData, upd
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button
             className="auth-toggle-btn"
-            onClick={() => updateAuthData({ isLogin: !isLogin, password: '', confirmPassword: '', otp: '', otpSent: false, error: '' })}
+            onClick={() => {
+              setError(''); // Clear error when toggling
+              updateAuthData({ isLogin: !isLogin, password: '', confirmPassword: '', otp: '', otpSent: false });
+            }}
           >
             {isLogin ? 'Sign Up' : 'Login'}
           </button>
