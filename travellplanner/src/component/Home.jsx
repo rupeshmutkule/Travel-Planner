@@ -60,13 +60,13 @@ export default function Home() {
   const [state, setState] = useReducer(
     (state, newState) => ({ ...state, ...(typeof newState === 'function' ? newState(state) : newState) }),
     {
-      destination: "", checkIn: "", checkOut: "",
+      destination: "", checkIn: "", checkOut: "", budget: "",
       running: false, loading: false, error: "",
       days: [], hotel: null, rawText: "",
       user: null, history: [], activeHistoryId: null,
       isAuthOpen: false, isForgotPasswordOpen: false, showHistory: false, showDeleteConfirm: null,
       showDeleteModal: null, showLogoutModal: false, showSuccessPopup: false,
-      successUser: "", isTermsOpen: false, isDeferredLoaded: false,
+      successUser: "", isTermsOpen: false, isDeferredLoaded: false, showBudgetOptions: false,
       authFormData: {
         name: '', email: '', mobileNumber: '', password: '', confirmPassword: '',
         otp: '', otpSent: false, termsAccepted: false, isLogin: true
@@ -75,7 +75,7 @@ export default function Home() {
   );
 
   const {
-    destination, checkIn, checkOut, running, loading, error, days, hotel, rawText,
+    destination, checkIn, checkOut, budget, running, loading, error, days, hotel, rawText,
     user, history, activeHistoryId, isAuthOpen, isForgotPasswordOpen, showHistory, showDeleteConfirm,
     showDeleteModal, showLogoutModal, showSuccessPopup, successUser, isTermsOpen,
     authFormData, isDeferredLoaded
@@ -141,7 +141,7 @@ export default function Home() {
     };
   }, [user, fetchHistory]);
 
-  const handleGo = async (e) => {
+  const handleGo = async (e, budget = '') => {
     e.preventDefault();
     if (!destination || !checkIn || !checkOut) return;
 
@@ -154,7 +154,7 @@ export default function Home() {
 
       const res = await fetch(`${config.apiUrl}/plan`, {
         method: "POST", headers,
-        body: JSON.stringify({ place: destination, checkIn, checkOut, historyId: activeHistoryId }),
+        body: JSON.stringify({ place: destination, checkIn, checkOut, budget, historyId: activeHistoryId }),
       });
       const data = await res.json();
 
@@ -190,8 +190,8 @@ export default function Home() {
 
   const handleNewChat = useCallback(() => {
     setState({
-      destination: "", checkIn: "", checkOut: "", days: [], hotel: null,
-      rawText: "", activeHistoryId: null, showHistory: false
+      destination: "", checkIn: "", checkOut: "", budget: "", days: [], hotel: null,
+      rawText: "", activeHistoryId: null, showHistory: false, showBudgetOptions: false
     });
   }, []);
 
@@ -301,13 +301,53 @@ export default function Home() {
             </h1>
           </div>
 
+          {/* Budget Selector - Below headline */}
+          <div className="budget-selector-section">
+            <button
+              type="button"
+              className={`budget-toggle-btn ${budget ? 'budget-toggle-btn--active' : ''}`}
+              onClick={() => setState(prev => ({ showBudgetOptions: !prev.showBudgetOptions }))}
+              aria-label="Select budget"
+              aria-expanded={state.showBudgetOptions}
+            >
+              {budget ? `Budget: ${budget === 'low' ? '💰 Low' : budget === 'medium' ? '💰💰 Medium' : '💰💰💰 High'}` : 'Select Budget'}
+              <span style={{ marginLeft: '6px', fontSize: '12px' }}>▼</span>
+            </button>
+
+            {state.showBudgetOptions && (
+              <div className="budget-options-inline">
+                <button
+                  type="button"
+                  className={`budget-option-btn ${budget === 'low' ? 'budget-option-btn--active' : ''}`}
+                  onClick={() => setState({ budget: budget === 'low' ? '' : 'low', showBudgetOptions: false })}
+                >
+                  💰 Low
+                </button>
+                <button
+                  type="button"
+                  className={`budget-option-btn ${budget === 'medium' ? 'budget-option-btn--active' : ''}`}
+                  onClick={() => setState({ budget: budget === 'medium' ? '' : 'medium', showBudgetOptions: false })}
+                >
+                  💰💰 Medium
+                </button>
+                <button
+                  type="button"
+                  className={`budget-option-btn ${budget === 'high' ? 'budget-option-btn--active' : ''}`}
+                  onClick={() => setState({ budget: budget === 'high' ? '' : 'high', showBudgetOptions: false })}
+                >
+                  💰💰💰 High
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Search — critical path, loaded eagerly */}
           <SearchCard
             destination={destination} setDestination={(v) => setState({ destination: v })}
             checkIn={checkIn} setCheckIn={(v) => setState({ checkIn: v })}
             checkOut={checkOut} setCheckOut={(v) => setState({ checkOut: v })}
             running={running} loading={loading}
-            onSubmit={handleGo}
+            onSubmit={(e) => handleGo(e, budget)}
             activeHistoryId={activeHistoryId}
             onClear={handleNewChat}
           />

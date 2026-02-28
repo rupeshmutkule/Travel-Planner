@@ -1,4 +1,4 @@
-import { memo, useState, useMemo } from 'react';
+import { memo, useState, useMemo, useEffect, useRef } from 'react';
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -14,6 +14,108 @@ function HistorySidebar({
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("active"); // 'active' or 'archived'
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside on mobile and prevent body scroll
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDeleteConfirm(null);
+      }
+    }
+
+    function handleScroll() {
+      setShowDeleteConfirm(null);
+    }
+
+    // Position dropdown with smart positioning for both desktop and mobile
+    function positionDropdown() {
+      if (dropdownRef.current) {
+        const dropdown = dropdownRef.current;
+        const button = dropdown.parentElement.querySelector('.sidebar-menu-btn');
+        
+        if (button) {
+          const buttonRect = button.getBoundingClientRect();
+          const dropdownHeight = dropdown.offsetHeight;
+          const viewportHeight = window.innerHeight;
+          
+          if (window.innerWidth > 767) {
+            // Desktop positioning (existing logic)
+            const spaceAbove = buttonRect.top;
+            
+            if (spaceAbove >= dropdownHeight + 10) {
+              // Position above
+              dropdown.style.position = 'fixed';
+              dropdown.style.top = `${buttonRect.top - dropdownHeight - 5}px`;
+              dropdown.style.right = `${window.innerWidth - buttonRect.right}px`;
+              dropdown.style.left = 'auto';
+              dropdown.style.bottom = 'auto';
+            } else {
+              // Position below
+              dropdown.style.position = 'fixed';
+              dropdown.style.top = `${buttonRect.bottom + 5}px`;
+              dropdown.style.right = `${window.innerWidth - buttonRect.right}px`;
+              dropdown.style.left = 'auto';
+              dropdown.style.bottom = 'auto';
+            }
+          } else {
+            // Mobile positioning with smart up/down detection
+            const spaceBelow = viewportHeight - buttonRect.bottom;
+            const spaceAbove = buttonRect.top;
+            
+            // Reset any previous inline styles
+            dropdown.style.position = 'absolute';
+            dropdown.style.right = '0';
+            dropdown.style.left = 'auto';
+            
+            // Check if there's enough space below (need at least dropdown height + 20px buffer)
+            if (spaceBelow >= dropdownHeight + 20) {
+              // Position below (normal)
+              dropdown.style.top = '100%';
+              dropdown.style.bottom = 'auto';
+              dropdown.style.marginTop = '5px';
+              dropdown.style.marginBottom = '0';
+              dropdown.classList.remove('dropdown-above');
+              dropdown.classList.add('dropdown-below');
+            } else if (spaceAbove >= dropdownHeight + 20) {
+              // Position above
+              dropdown.style.top = 'auto';
+              dropdown.style.bottom = '100%';
+              dropdown.style.marginTop = '0';
+              dropdown.style.marginBottom = '5px';
+              dropdown.classList.remove('dropdown-below');
+              dropdown.classList.add('dropdown-above');
+            } else {
+              // Fallback: position above if both spaces are tight
+              dropdown.style.top = 'auto';
+              dropdown.style.bottom = '100%';
+              dropdown.style.marginTop = '0';
+              dropdown.style.marginBottom = '5px';
+              dropdown.classList.remove('dropdown-below');
+              dropdown.classList.add('dropdown-above');
+            }
+          }
+        }
+      }
+    }
+
+    if (showDeleteConfirm) {
+      // Position dropdown for both desktop and mobile
+      setTimeout(positionDropdown, 0);
+      
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+      document.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', positionDropdown);
+      
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('touchstart', handleClickOutside);
+        document.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', positionDropdown);
+      };
+    }
+  }, [showDeleteConfirm, setShowDeleteConfirm]);
 
   const filteredHistory = useMemo(() => {
     let filtered = history || [];
@@ -101,13 +203,21 @@ function HistorySidebar({
             <div style={{ position: 'relative' }}>
               <button
                 className="sidebar-menu-btn"
-                onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(showDeleteConfirm === item._id ? null : item._id); }}
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setShowDeleteConfirm(showDeleteConfirm === item._id ? null : item._id); 
+                }}
                 aria-label={`Options for ${item.destination}`}
                 aria-expanded={showDeleteConfirm === item._id}
                 aria-haspopup="true"
               >⋮</button>
               {showDeleteConfirm === item._id && (
-                <div className="sidebar-dropdown" role="menu">
+                <div 
+                  ref={dropdownRef}
+                  className="sidebar-dropdown" 
+                  role="menu"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
                     className="sidebar-dropdown-btn"
                     role="menuitem"

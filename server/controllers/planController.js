@@ -1,6 +1,5 @@
 import History from '../models/History.js';
 import dotenv from 'dotenv';
-import fetch from 'node-fetch';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
@@ -8,7 +7,7 @@ dotenv.config();
 const apiKey = process.env.GEMINI_API_KEY;
 
 export const createPlan = async (req, res) => {
-  const { place, checkIn, checkOut, historyId } = req.body;
+  const { place, checkIn, checkOut, budget, historyId } = req.body;
   const userId = req.user ? req.user._id : null; // Optionally linked to user
 
   if (!place || !checkIn || !checkOut) {
@@ -23,25 +22,74 @@ export const createPlan = async (req, res) => {
   const endDate = new Date(checkOut);
   const numDays = Math.max(1, Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)));
 
+  // Budget-specific instructions
+  let budgetInstructions = '';
+  if (budget === 'low') {
+    budgetInstructions = `
+BUDGET: LOW (Budget-Friendly Travel)
+- Hotels: Recommend ONLY 2-star or budget hotels, hostels, guesthouses (₹500-1500/night or $10-30/night)
+- Food: Local street food, budget restaurants, food courts (₹100-300/meal or $2-5/meal)
+- Transport: Public buses, metro, shared auto-rickshaws, walking
+- Activities: FREE or low-cost attractions (parks, temples, beaches, markets, walking tours)
+- Avoid: Luxury hotels, fine dining, expensive tours, private transport
+- Examples: Budget hotels like OYO, Zostel hostels, local dhabas, street food stalls`;
+  } else if (budget === 'medium') {
+    budgetInstructions = `
+BUDGET: MEDIUM (Comfortable Travel)
+- Hotels: 3-star hotels, good quality accommodations (₹2000-4000/night or $40-80/night)
+- Food: Mix of local restaurants and popular eateries (₹300-800/meal or $5-15/meal)
+- Transport: Mix of public transport, Uber/Ola, occasional private cabs
+- Activities: Mix of paid attractions and free experiences (museums, guided tours, popular sites)
+- Balance: Comfort without overspending
+- Examples: Hotels like Treebo, Lemon Tree, popular restaurants, standard tours`;
+  } else if (budget === 'high') {
+    budgetInstructions = `
+BUDGET: HIGH (Luxury Travel)
+- Hotels: 4-5 star luxury hotels, resorts, boutique properties (₹8000+/night or $150+/night)
+- Food: Fine dining, premium restaurants, hotel dining (₹1000+/meal or $20+/meal)
+- Transport: Private cars, premium cabs, first-class travel
+- Activities: Premium experiences (spa, private tours, exclusive access, adventure sports)
+- Focus: Luxury, comfort, exclusive experiences
+- Examples: Taj, Oberoi, ITC hotels, fine dining restaurants, premium tours`;
+  }
+
   const prompt = `You are a professional travel planner AI. Create a ${numDays}-day travel itinerary for ${place}.
 Check-in: ${checkIn}, Check-out: ${checkOut}.
+${budgetInstructions}
 
-RULES:
-- Use REAL place names, real hotel names, real attractions specific to ${place}.
-- Each day must have 4-5 activities with morning, afternoon, and evening slots.
-- Include specific timings like "9:00 AM", "2:00 PM".
-- Use appropriate emojis: 🏨 hotel, 🍽️ food, 🏛️ monument, 🛍️ shopping, etc.
+CRITICAL RULES:
+1. Use REAL place names, REAL hotel names, REAL attractions specific to ${place}
+2. ${budget ? `STRICTLY follow the ${budget.toUpperCase()} budget guidelines above` : 'Provide balanced recommendations'}
+3. Each day must have 4-5 activities with specific timings (9:00 AM, 2:00 PM, etc.)
+4. Use appropriate emojis: 🏨 hotel, 🍽️ food, 🏛️ monument, 🛍️ shopping, 🎭 entertainment
+5. For EVERY activity and hotel, provide a working website URL:
+   - Hotels: Use format "https://www.google.com/search?q=Hotel+Name+${place.replace(/ /g, '+')}"
+   - Restaurants: Use format "https://www.google.com/search?q=Restaurant+Name+${place.replace(/ /g, '+')}"
+   - Attractions: Use format "https://www.google.com/search?q=Attraction+Name+${place.replace(/ /g, '+')}"
+6. Make sure EVERY activity object has a "website" field with a valid URL
 
 Return ONLY valid JSON in this format:
 {
-  "hotel": { "name": "Real Hotel Name", "area": "Locality", "rating": "4.5", "highlight": "Why it is ideal" },
+  "hotel": { 
+    "name": "Real Hotel Name matching budget", 
+    "area": "Locality", 
+    "rating": "4.5", 
+    "highlight": "Why it fits the budget",
+    "website": "https://www.google.com/search?q=Hotel+Name+${place.replace(/ /g, '+')}"
+  },
   "days": [
     {
       "day": 1,
       "date": "${checkIn}",
       "title": "Day Theme",
       "activities": [
-        { "emoji": "🏨", "title": "Check-in", "time": "10:00 AM", "description": "Welcome" }
+        { 
+          "emoji": "🏨", 
+          "title": "Real Place Name", 
+          "time": "10:00 AM", 
+          "description": "Brief description",
+          "website": "https://www.google.com/search?q=Place+Name+${place.replace(/ /g, '+')}"
+        }
       ]
     }
   ]
