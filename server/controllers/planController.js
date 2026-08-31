@@ -1,11 +1,144 @@
 import History from '../models/History.js';
 import dotenv from 'dotenv';
-import fetch from 'node-fetch';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
 const apiKey = process.env.GEMINI_API_KEY;
+
+/*
+ * Gemini resilience layer
+ * -----------------------
+ * The generative API frequently returns transient 503 ("high demand") and 429
+ * (rate-limit) errors when a model is overloaded, so a single call fails often.
+ * We defend against that with two independent strategies:
+ *   1. Model fallback  – try a chain of models; each has its own capacity pool,
+ *                        so if the primary is overloaded the next usually works.
+ *   2. Backoff retries – retry transient failures on the same model with
+ *                        exponential backoff + jitter.
+ * Every model below supports generateContent + a JSON response mime type.
+ */
+const MODEL_CHAIN = [
+  "gemini-flash-latest",
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-flash-lite-latest",
+];
+
+const MAX_ATTEMPTS_PER_MODEL = 2;   // initial try + 1 retry
+const BASE_BACKOFF_MS = 500;        // grows exponentially with jitter
+const GLOBAL_DEADLINE_MS = 30000;   // stop launching new attempts after this
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Transient failures worth retrying / falling back on.
+const isTransientError = (err) => {
+  const status = Number(err?.status ?? err?.statusCode);
+  if ([429, 500, 502, 503, 504].includes(status)) return true;
+  const msg = String(err?.message || "").toLowerCase();
+  return (
+    msg.includes("503") || msg.includes("overloaded") ||
+    msg.includes("high demand") || msg.includes("service unavailable") ||
+    msg.includes("unavailable") || msg.includes("429") ||
+    msg.includes("rate limit") || msg.includes("quota") ||
+    msg.includes("500") || msg.includes("internal") ||
+    msg.includes("502") || msg.includes("504") ||
+    msg.includes("fetch failed") || msg.includes("network") ||
+    msg.includes("timeout") || msg.includes("etimedout") || msg.includes("econnreset")
+  );
+};
+
+// Fatal config problems (bad/missing key, no access): retrying never helps and
+// we must not leak the raw reason to the client.
+const isAuthError = (err) => {
+  const status = Number(err?.status ?? err?.statusCode);
+  if ([401, 403].includes(status)) return true;
+  const msg = String(err?.message || "").toLowerCase();
+  return (
+    msg.includes("api key not valid") || msg.includes("api_key_invalid") ||
+    msg.includes("permission denied") || msg.includes("unauthenticated") ||
+    (msg.includes("api key") && msg.includes("invalid"))
+  );
+};
+
+// Models sometimes wrap JSON in ```json fences or add stray prose despite the
+// responseMimeType hint. Pull out the JSON object before parsing.
+const extractJson = (text) => {
+  if (!text || !text.trim()) throw new Error("Empty response from model");
+  let t = text.trim();
+  const fenced = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) t = fenced[1].trim();
+  const first = t.indexOf("{");
+  const last = t.lastIndexOf("}");
+  if (first !== -1 && last > first) t = t.slice(first, last + 1);
+  return JSON.parse(t);
+};
+
+// Shape guard so we never persist / return garbage that merely parsed as JSON.
+const isValidPlan = (plan) =>
+  plan && typeof plan === "object" &&
+  Array.isArray(plan.days) && plan.days.length > 0;
+
+// Run the whole model chain with backoff; resolve to parsed plan JSON or throw.
+const generatePlan = async (prompt) => {
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const startedAt = Date.now();
+  let lastError;
+
+  for (const modelName of MODEL_CHAIN) {
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+      generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
+    });
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS_PER_MODEL; attempt++) {
+      try {
+        const result = await model.generateContent(prompt);
+        const plan = extractJson(result.response.text());
+        if (!isValidPlan(plan)) {
+          throw new SyntaxError("Model returned JSON without a valid 'days' array");
+        }
+        return plan;
+      } catch (err) {
+        lastError = err;
+        console.error(`[Gemini] ${modelName} attempt ${attempt}/${MAX_ATTEMPTS_PER_MODEL} failed: ${err.message}`);
+
+        if (isAuthError(err)) throw err; // fatal — stop everything
+
+        const canRetrySameModel =
+          attempt < MAX_ATTEMPTS_PER_MODEL &&
+          (isTransientError(err) || err instanceof SyntaxError);
+        const withinDeadline = Date.now() - startedAt < GLOBAL_DEADLINE_MS;
+
+        if (canRetrySameModel && withinDeadline) {
+          const delay = BASE_BACKOFF_MS * 2 ** (attempt - 1) + Math.floor(Math.random() * 250);
+          await sleep(delay);
+          continue; // retry same model
+        }
+        break; // give up on this model → fall through to the next one
+      }
+    }
+
+    if (Date.now() - startedAt >= GLOBAL_DEADLINE_MS) break;
+  }
+
+  throw lastError || new Error("All model attempts failed");
+};
+
+// Map an internal error to a safe, friendly client message + HTTP status.
+const toClientError = (err) => {
+  if (isAuthError(err)) {
+    // Don't reveal configuration issues to end users.
+    return { status: 503, message: "The travel planner is temporarily unavailable. Please try again in a little while." };
+  }
+  if (isTransientError(err)) {
+    return { status: 503, message: "Our travel planner is experiencing high demand right now. Please wait a few seconds and try again." };
+  }
+  if (err instanceof SyntaxError || String(err?.message || "").toLowerCase().includes("json")) {
+    return { status: 502, message: "We couldn't quite build your itinerary this time. Please try again." };
+  }
+  return { status: 500, message: "Something went wrong while creating your itinerary. Please try again." };
+};
 
 export const createPlan = async (req, res) => {
   const { place, checkIn, checkOut, historyId } = req.body;
@@ -48,21 +181,7 @@ Return ONLY valid JSON in this format:
 }`;
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-flash-latest",
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.7,
-      }
-    });
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    
-    // Attempt to parse the AI output
-    const planData = JSON.parse(text);
+    const planData = await generatePlan(prompt);
 
     // Save to history if user is logged in
     if (userId) {
@@ -91,8 +210,9 @@ Return ONLY valid JSON in this format:
 
     res.json(planData);
   } catch (err) {
-    console.error("SERVER ERROR:", err.message);
-    res.status(500).json({ error: `Failure: ${err.message}` });
+    console.error("SERVER ERROR:", err?.message);
+    const { status, message } = toClientError(err);
+    res.status(status).json({ error: message });
   }
 };
 
