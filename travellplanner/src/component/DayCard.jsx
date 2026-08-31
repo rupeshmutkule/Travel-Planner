@@ -2,13 +2,14 @@ export default function DayCard({ day, date, title, activities = [] }) {
   // Normalize activities so UI always receives objects
   const normalizedActivities = activities.map((act) => {
     if (typeof act === "string") {
-      return { emoji: "📍", title: act, time: "", description: "" };
+      return { emoji: "📍", title: act, time: "", description: "", website: "" };
     }
     return {
       emoji: act.emoji || "📍",
       title: act.title || act.name || "Activity",
       time: act.time || "",
       description: act.description || act.details || "",
+      website: act.website || "",
     };
   });
 
@@ -188,28 +189,66 @@ export default function DayCard({ day, date, title, activities = [] }) {
                       fontWeight: "600",
                       fontFamily: "Georgia, serif",
                       lineHeight: "1.4",
+                      flex: 1,
                     }}
                   >
                     {act.title}
                   </span>
 
-                  {act.time && (
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        color: "#38bdf8",
-                        background: "rgba(56,189,248,0.1)",
-                        border: "1px solid rgba(56,189,248,0.2)",
-                        borderRadius: "20px",
-                        padding: "2px 9px",
-                        letterSpacing: "0.04em",
-                        whiteSpace: "nowrap",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {act.time}
-                    </span>
-                  )}
+                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                    {act.time && (
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          color: "#38bdf8",
+                          background: "rgba(56,189,248,0.1)",
+                          border: "1px solid rgba(56,189,248,0.2)",
+                          borderRadius: "20px",
+                          padding: "2px 9px",
+                          letterSpacing: "0.04em",
+                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {act.time}
+                      </span>
+                    )}
+                    
+                    {act.website && (
+                      <a
+                        href={act.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: "16px",
+                          color: "#38bdf8",
+                          background: "rgba(56,189,248,0.1)",
+                          border: "1px solid rgba(56,189,248,0.2)",
+                          borderRadius: "50%",
+                          width: "26px",
+                          height: "26px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          textDecoration: "none",
+                          transition: "all 0.2s ease",
+                          flexShrink: 0,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "rgba(56,189,248,0.2)";
+                          e.currentTarget.style.transform = "scale(1.1)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "rgba(56,189,248,0.1)";
+                          e.currentTarget.style.transform = "scale(1)";
+                        }}
+                        aria-label={`Visit website for ${act.title}`}
+                        title="Visit website"
+                      >
+                        🌐
+                      </a>
+                    )}
+                  </div>
                 </div>
 
                 {act.description && (

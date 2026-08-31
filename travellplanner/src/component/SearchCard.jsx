@@ -32,7 +32,7 @@ function SearchCard({ destination, setDestination, checkIn, setCheckIn, checkOut
       setShowDates(true);
       return;
     }
-    onSubmit(e);
+    onSubmit(e); // Remove budget parameter since it's handled in Home
   };
 
   return (

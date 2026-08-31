@@ -82,7 +82,7 @@ export const sendOTP = async (req, res) => {
     });
   } catch (error) {
     console.error("SEND OTP ERROR:", error.message);
-
+    
     return res.status(500).json({
       success: false,
       message:

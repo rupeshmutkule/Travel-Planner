@@ -476,6 +476,212 @@ body {
   opacity: 0.8;
 }
 
+/* ── Budget Selector Section ───────────────────────── */
+.budget-selector-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 32px;
+}
+
+.budget-toggle-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 25px;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.budget-toggle-btn:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  transform: translateY(-2px);
+}
+
+.budget-toggle-btn--active {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(99, 102, 241, 0.15));
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.budget-options-inline {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  animation: budgetSlideIn 0.3s ease;
+}
+
+@keyframes budgetSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.budget-option-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.budget-option-btn:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  transform: translateY(-2px);
+}
+
+.budget-option-btn--active {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.2));
+  border-color: #38bdf8;
+  color: #38bdf8;
+  font-weight: 600;
+  transform: translateY(-2px);
+}
+
+/* ── Budget Options ─────────────────────────────────── */
+.budget-selector-wrapper {
+  padding: 8px 12px 0;
+}
+
+.budget-selector {
+  position: relative;
+  display: inline-block;
+}
+
+.budget-selector-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.budget-selector-btn:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+}
+
+.budget-dropdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
+}
+
+.budget-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: #1a1b26;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  z-index: 100;
+  min-width: 180px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: dropdownSlideDown 0.2s ease;
+}
+
+@keyframes dropdownSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.budget-dropdown-item {
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.budget-dropdown-item:hover {
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+}
+
+.budget-dropdown-item--active {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.budget-options {
+  display: flex;
+  gap: 8px;
+  padding: 0 4px;
+  flex-wrap: wrap;
+}
+
+.budget-pill {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.budget-pill:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+}
+
+.budget-pill--active {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.2));
+  border-color: #38bdf8;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
 /* ── Suggestion Pills ───────────────────────────────── */
 .suggestions {
   margin-top: 28px;
@@ -1004,26 +1210,44 @@ body {
 .sidebar-dropdown {
   position: absolute;
   right: 0;
-  bottom: 40px; /* Changed from top to bottom */
+  bottom: 100%; /* Position above the button */
+  margin-bottom: 5px;
   background: #1a1b26;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-sm);
   padding: 5px;
-  z-index: 100;
-  width: 120px;
+  z-index: 1000; /* Very high z-index to appear above all sidebar elements */
+  width: 100px; /* Wider for larger text */
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  transform-origin: bottom right;
+  animation: dropdownSlideUp 0.2s ease;
+}
+
+@keyframes dropdownSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .sidebar-dropdown-btn {
   width: 100%;
-  padding: 8px;
+  padding: 8px 10px;
   background: none;
   border: none;
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   text-align: left;
   border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .sidebar-dropdown-btn:hover {
@@ -1742,6 +1966,26 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 /* ── Responsive ─────────────────────────────────────── */
+/* Desktop dropdown positioning - smart positioning for desktop only */
+@media (min-width: 768px) {
+  .sidebar-dropdown {
+    position: fixed !important;
+    z-index: 1000 !important;
+    width: 95px !important;
+    animation: dropdownSlideUp 0.2s ease !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .sidebar-dropdown::before {
+    display: none !important;
+  }
+
+  .sidebar-dropdown-btn {
+    padding: 7px 8px !important;
+    font-size: 13px !important;
+  }
+}
+
 @media (max-width: 767px) {
   .navbar {
     padding: 14px 16px;
@@ -1763,6 +2007,28 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
   .headline-title {
     font-size: 2.2rem;
+  }
+
+  /* Budget selector on mobile */
+  .budget-selector-section {
+    margin: 16px 0 24px;
+    gap: 10px;
+  }
+
+  .budget-toggle-btn {
+    font-size: 13px;
+    padding: 8px 16px;
+  }
+
+  .budget-options-inline {
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .budget-option-btn {
+    font-size: 12px;
+    padding: 6px 12px;
   }
 
   /* ChatGPT/Gemini style compact input */
@@ -1828,6 +2094,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     min-width: 60px;
   }
 
+  /* Budget selector on mobile */
+  .budget-selector-wrapper {
+    padding: 6px 8px 0;
+  }
+
+  .budget-selector-btn {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
   .suggestions {
     max-width: 360px;
   }
@@ -1873,12 +2149,45 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     font-size: 10px;
   }
   
-  /* Ensure dropdown opens upward on mobile */
+  /* Mobile dropdown positioning - smart up/down positioning */
   .sidebar-dropdown {
-    bottom: 40px;
-    top: auto;
+    position: absolute !important;
+    right: 0 !important;
+    top: 100% !important;
+    bottom: auto !important;
+    margin-top: 5px !important;
+    margin-bottom: 0 !important;
+    width: 100px !important;
+    z-index: 1000 !important;
+    transform-origin: top right !important;
+    animation: dropdownSlideDown 0.2s ease !important;
   }
 
+  /* When positioned above the button */
+  .sidebar-dropdown.dropdown-above {
+    top: auto !important;
+    bottom: 100% !important;
+    margin-top: 0 !important;
+    margin-bottom: 5px !important;
+    transform-origin: bottom right !important;
+    animation: dropdownSlideUp 0.2s ease !important;
+  }
+
+  /* When positioned below the button */
+  .sidebar-dropdown.dropdown-below {
+    top: 100% !important;
+    bottom: auto !important;
+    margin-top: 5px !important;
+    margin-bottom: 0 !important;
+    transform-origin: top right !important;
+    animation: dropdownSlideDown 0.2s ease !important;
+  }
+
+  .sidebar-dropdown-btn {
+    padding: 8px 10px !important;
+    font-size: 14px !important;
+  }
+  
   .raw-text-box {
     padding: 20px 18px;
   }
